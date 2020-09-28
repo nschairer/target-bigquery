@@ -74,10 +74,14 @@ def define_schema(field, name):
     else:
         schema_type = field['type']
     if schema_type == "object":
-        schema_type = "RECORD"
-        schema_fields = tuple(build_schema(field))
+        if "patternProperties" in field.keys() or "properties" not in field.keys():
+            schema_type = 'string'
+        else:
+            schema_type = 'RECORD'
+            schema_fields = tuple(build_schema(field))
     if schema_type == "array":
         schema_type = field.get('items').get('type')
+        schema_type = items_type[-1] if isinstance(items_type, list) else items_type
         schema_mode = "REPEATED"
         if schema_type == "object":
           schema_type = "RECORD"
@@ -88,6 +92,8 @@ def define_schema(field, name):
         if "format" in field:
             if field['format'] == "date-time":
                 schema_type = "timestamp"
+
+    if schema_type is None: schema_type = 'string'
 
     if schema_type == 'number':
         schema_type = 'FLOAT'
@@ -103,6 +109,7 @@ def build_schema(schema):
             continue
 
         schema_name, schema_type, schema_mode, schema_description, schema_fields = define_schema(schema['properties'][key], key)
+        if schema_type == 'RECORD' and len(schema_fields) == 0: continue
         SCHEMA.append(SchemaField(schema_name, schema_type, schema_mode, schema_description, schema_fields))
 
     return SCHEMA
