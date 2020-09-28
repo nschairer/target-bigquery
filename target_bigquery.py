@@ -80,7 +80,7 @@ def define_schema(field, name):
             schema_type = 'RECORD'
             schema_fields = tuple(build_schema(field))
     if schema_type == "array":
-        schema_type = field.get('items').get('type')
+        items_type = field.get('items').get('type')
         schema_type = items_type[-1] if isinstance(items_type, list) else items_type
         schema_mode = "REPEATED"
         if schema_type == "object":
