@@ -6,6 +6,7 @@ import sys
 import json
 import logging
 import collections
+import decimal
 import threading
 import http.client
 import urllib
@@ -109,7 +110,8 @@ def build_schema(schema):
         #     continue
 
         schema_name, schema_type, schema_mode, schema_description, schema_fields = define_schema(schema['properties'][key], key)
-        # if schema_type == 'RECORD' and len(schema_fields) == 0: continue
+        if schema_type == 'RECORD' and len(schema_fields) == 0:
+            schema_type = 'string'#Empty record objects
         SCHEMA.append(SchemaField(schema_name, schema_type, schema_mode, schema_description, schema_fields))
 
     return SCHEMA
@@ -236,7 +238,13 @@ def persist_lines_stream(project_id, dataset_id, lines=None, validate_records=Tr
                 # logging.info(msg.record)
                 validate(msg.record, schema)
 
-            errors[msg.stream] = bigquery_client.insert_rows_json(tables[msg.stream], [msg.record])
+            new_record = {}
+            for key, value in msg.record.items():
+                if isinstance(value, decimal.Decimal):
+                    value = float(value)
+            # dat = bytes(json.dumps(new_record) + '\n', 'UTF-8')
+
+            errors[msg.stream] = bigquery_client.insert_rows_json(tables[msg.stream], [new_record])
             rows[msg.stream] += 1
 
             state = None
