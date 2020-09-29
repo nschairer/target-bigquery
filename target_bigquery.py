@@ -104,12 +104,12 @@ def build_schema(schema):
     SCHEMA = []
     for key in schema['properties'].keys():
         
-        if not (bool(schema['properties'][key])):
-            # if we endup with an empty record.
-            continue
+        # if not (bool(schema['properties'][key])):
+        #     # if we endup with an empty record.
+        #     continue
 
         schema_name, schema_type, schema_mode, schema_description, schema_fields = define_schema(schema['properties'][key], key)
-        if schema_type == 'RECORD' and len(schema_fields) == 0: continue
+        # if schema_type == 'RECORD' and len(schema_fields) == 0: continue
         SCHEMA.append(SchemaField(schema_name, schema_type, schema_mode, schema_description, schema_fields))
 
     return SCHEMA
@@ -233,6 +233,7 @@ def persist_lines_stream(project_id, dataset_id, lines=None, validate_records=Tr
             schema = schemas[msg.stream]
 
             if validate_records:
+                # logging.info(msg.record)
                 validate(msg.record, schema)
 
             errors[msg.stream] = bigquery_client.insert_rows_json(tables[msg.stream], [msg.record])
